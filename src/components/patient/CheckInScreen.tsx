@@ -154,7 +154,7 @@ export function CheckInScreen({ user, onCheckedIn }: CheckInScreenProps) {
 
           <div>
             <label className="text-sm font-medium text-slate-600 mb-1.5 block">
-              Cédula de Ciudadanía
+              Documento de identificación
             </label>
             <div className="relative">
               <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />

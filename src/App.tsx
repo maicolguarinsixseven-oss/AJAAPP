@@ -140,12 +140,9 @@ function AppContent() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <img src="/aja_app_logo.svg" alt="AJA' APP" className="h-10 w-auto object-contain" />
-              <div>
-                <h1 className="text-base font-bold text-slate-800 leading-tight">AJA' APP</h1>
-                <p className="text-[10px] text-slate-400 leading-tight">
-                  {roleLabel(currentUser.role)} · {currentUser.name}
-                </p>
-              </div>
+              <h1 className="text-lg font-extrabold text-slate-800 leading-tight">
+                {roleLabel(currentUser.role)} · {currentUser.name}
+              </h1>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5">

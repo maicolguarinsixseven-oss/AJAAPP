@@ -382,11 +382,11 @@ function StaffTab({
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newCedula.trim()) {
-      setError('Completa nombre y cédula.');
+      setError('Completa nombre y documento de identificación.');
       return;
     }
     if (users.some((u) => u.cedula === newCedula.trim())) {
-      setError('Ya existe un usuario con esa cédula.');
+      setError('Ya existe un usuario con ese documento de identificación.');
       return;
     }
     onAdd({
@@ -510,7 +510,7 @@ function StaffTab({
 
         <div>
           <label className="text-sm font-medium text-slate-600 mb-1.5 block">
-            Cédula de Ciudadanía
+            Documento de identificación
           </label>
           <div className="relative">
             <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />

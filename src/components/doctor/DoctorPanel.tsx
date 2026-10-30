@@ -1061,7 +1061,7 @@ function AvailabilityCalendarSection({
                 key={idx}
                 type="button"
                 onClick={() => handleDayTap(day)}
-                className={`aspect-square rounded-lg text-xs font-medium transition-all flex items-center justify-center select-none ${cellClass}`}
+                className={`aspect-square rounded-lg text-xs font-medium transition-all flex items-center justify-center select-none touch-manipulation ${cellClass}`}
               >
                 {day}
               </button>

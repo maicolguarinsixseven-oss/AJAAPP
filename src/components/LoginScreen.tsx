@@ -13,13 +13,13 @@ export function LoginScreen() {
     e.preventDefault();
     setError('');
     if (!cedula.trim()) {
-      setError('Ingresa tu número de Cédula de Ciudadanía.');
+      setError('Ingresa tu número de documento de identificación.');
       return;
     }
     setLoading(true);
     const user = await login(cedula);
     if (!user) {
-      setError('Cédula no encontrada. Verifica el número e intenta de nuevo.');
+      setError('Documento no encontrado. Verifica el número e intenta de nuevo.');
     }
     setLoading(false);
   };
@@ -52,11 +52,11 @@ export function LoginScreen() {
       >
         <h2 className="font-bold text-slate-800 mb-1">Iniciar Sesión</h2>
         <p className="text-sm text-slate-500 mb-4">
-          Ingresa tu Cédula de Ciudadanía para continuar.
+          Ingresa tu documento de identificación para continuar.
         </p>
 
         <label className="text-sm font-medium text-slate-600 mb-1.5 block">
-          Cédula de Ciudadanía
+          Documento de identificación
         </label>
         <div className="relative">
           <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
