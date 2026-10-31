@@ -17,6 +17,7 @@ type Particle = {
 const MAX_PARTICLES = 30;
 const MOBILE_PARTICLE_LIMIT = 15;
 const MOBILE_BREAKPOINT = 768;
+const MOBILE_QUERY = `(max-width: ${MOBILE_BREAKPOINT}px), (hover: none) and (pointer: coarse)`;
 
 function getParticleCount(width: number) {
   return width <= MOBILE_BREAKPOINT ? MOBILE_PARTICLE_LIMIT : MAX_PARTICLES;
@@ -35,6 +36,7 @@ export function InteractiveBackground() {
     img.src = particleSvg;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const isMobile = window.matchMedia(MOBILE_QUERY).matches;
 
     let particles: Particle[] = [];
     let width = window.innerWidth;
@@ -61,28 +63,8 @@ export function InteractiveBackground() {
       }
     };
 
-    const resize = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = Math.floor(width * dpr);
-      canvas.height = Math.floor(height * dpr);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      initParticles();
-    };
-
-    const animate = () => {
-      ctx.clearRect(0, 0, width, height);
-
-      if (!img.complete || img.naturalWidth <= 0) {
-        rafId = requestAnimationFrame(animate);
-        return;
-      }
-
-      const aspect = img.naturalHeight / img.naturalWidth;
+    const moveParticles = () => {
       const margin = 80;
-
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
@@ -94,7 +76,15 @@ export function InteractiveBackground() {
         if (p.x > width + margin) p.x = -margin;
         if (p.y < -margin) p.y = height + margin;
         if (p.y > height + margin) p.y = -margin;
+      }
+    };
 
+    const paint = () => {
+      ctx.clearRect(0, 0, width, height);
+      if (!img.complete || img.naturalWidth <= 0) return;
+
+      const aspect = img.naturalHeight / img.naturalWidth;
+      for (const p of particles) {
         const breath = 0.7 + 0.3 * Math.sin(p.opacityPhase);
         const drawW = p.size;
         const drawH = p.size * aspect;
@@ -106,8 +96,29 @@ export function InteractiveBackground() {
         ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
         ctx.restore();
       }
+    };
 
+    const animate = () => {
+      moveParticles();
+      paint();
       rafId = requestAnimationFrame(animate);
+    };
+
+    const resize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      initParticles();
+      if (isMobile) paint();
+    };
+
+    const start = () => {
+      if (isMobile) paint();
+      else rafId = requestAnimationFrame(animate);
     };
 
     const onResize = () => resize();
@@ -116,9 +127,9 @@ export function InteractiveBackground() {
     resize();
 
     if (img.complete) {
-      rafId = requestAnimationFrame(animate);
+      start();
     } else {
-      img.onload = () => { rafId = requestAnimationFrame(animate); };
+      img.onload = start;
     }
 
     return () => {
