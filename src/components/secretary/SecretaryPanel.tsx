@@ -216,7 +216,7 @@ function ScheduleTab() {
 
     // Block same-day scheduling — minimum 1 day advance
     const todayStr = formatDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-    if (scheduledDate === todayStr) {
+    if (scheduledDate === todayStr && !data.sede.allowSameDayBooking) {
       setError('No se pueden agendar citas para el día actual. Mínimo 1 día de anticipación.');
       return;
     }
@@ -493,22 +493,20 @@ function ScheduleTab() {
               schedule={getDoctorSchedule(selectedDoctorCedula)}
               appointments={data.appointments}
               selectedDate={scheduledDate}
+              allowSameDay={data.sede.allowSameDayBooking}
               onSelectDate={(d) => { setScheduledDate(d); setScheduledTime(''); setError(''); }}
             />
           )}
 
           {/* Same-day warning */}
-          {selectedDoctorCedula && (() => {
-            const todayStr = formatDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-            return (
-              <div className="bg-amber-50 rounded-xl p-3 flex items-start gap-2.5 animate-slide-up">
-                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-800">
-                  Las citas deben agendarse con mínimo 1 día de anticipación. El día actual no está disponible para selección.
-                </p>
-              </div>
-            );
-          })()}
+          {selectedDoctorCedula && !data.sede.allowSameDayBooking && (
+            <div className="bg-amber-50 rounded-xl p-3 flex items-start gap-2.5 animate-slide-up">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-800">
+                Las citas deben agendarse con mínimo 1 día de anticipación. El día actual no está disponible para selección.
+              </p>
+            </div>
+          )}
 
           {/* 30-min interval slot selector */}
           {selectedDoctorCedula && scheduledDate && (
@@ -595,10 +593,11 @@ interface DoctorDayCalendarProps {
   schedule: DoctorScheduleEntry[];
   appointments: Appointment[];
   selectedDate: string;
+  allowSameDay: boolean;
   onSelectDate: (date: string) => void;
 }
 
-function DoctorDayCalendar({ schedule, appointments, selectedDate, onSelectDate }: DoctorDayCalendarProps) {
+function DoctorDayCalendar({ schedule, appointments, selectedDate, allowSameDay, onSelectDate }: DoctorDayCalendarProps) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -618,14 +617,14 @@ function DoctorDayCalendar({ schedule, appointments, selectedDate, onSelectDate 
 
   const todayStr = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
 
-  const isPastOrToday = (day: number): boolean => {
+  const isUnavailableDay = (day: number): boolean => {
     const dateObj = new Date(viewYear, viewMonth, day);
     const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    return dateObj <= todayMidnight;
+    return allowSameDay ? dateObj < todayMidnight : dateObj <= todayMidnight;
   };
 
   const getDayStatus = (day: number): 'available' | 'full' | 'off' | 'past' => {
-    if (isPastOrToday(day)) return 'past';
+    if (isUnavailableDay(day)) return 'past';
     const dateStr = formatDate(viewYear, viewMonth, day);
     const daySched = scheduleMap.get(dateStr);
     if (!daySched) return 'off';

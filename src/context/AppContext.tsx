@@ -39,6 +39,7 @@ interface AppContextValue {
   markPresent: () => Promise<void>;
   markAbsentAndReschedule: () => Promise<void>;
   updateSede: (sede: Partial<SedeConfig>) => Promise<void>;
+  setSameDayBooking: (enabled: boolean) => Promise<void>;
   addUser: (user: User) => Promise<void>;
   removeUser: (cedula: string) => Promise<boolean>;
   scheduleAppointment: (params: ScheduleAppointmentParams) => Promise<{ appointment: Appointment | null; error: string | null }>;
@@ -46,7 +47,7 @@ interface AppContextValue {
   getDoctorAvailability: (doctorCedula: string) => DoctorAvailability | null;
   saveDoctorSchedule: (entries: DoctorScheduleEntry[]) => Promise<void>;
   toggleScheduleDay: (doctorCedula: string, date: string) => Promise<void>;
-  ensureWeekdaysScheduled: (doctorCedula: string, monthsAhead?: number) => Promise<void>;
+  ensureWeekdaysScheduled: (doctorCedula: string, monthsAhead?: number, includeToday?: boolean) => Promise<void>;
   getDoctorSchedule: (doctorCedula: string) => DoctorScheduleEntry[];
   getDoctorDisabledDays: (doctorCedula: string) => string[];
   toggleTimeSlot: (doctorCedula: string, date: string, slotTime: string) => Promise<void>;
@@ -98,6 +99,7 @@ interface DbSedeConfig {
   lat: number;
   lng: number;
   consultation_minutes: number;
+  same_day_booking: boolean;
 }
 
 interface DbDoctorAvailability {
@@ -255,6 +257,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         lat: s.lat,
         lng: s.lng,
         consultationMinutes: s.consultation_minutes,
+        allowSameDayBooking: s.same_day_booking,
       };
     }
 
@@ -621,16 +624,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const updateSede = async (sede: Partial<SedeConfig>) => {
-    const update: Record<string, number | string> = {};
+    const update: Record<string, number | string | boolean> = {};
     if (sede.name !== undefined) update.name = sede.name;
     if (sede.address !== undefined) update.address = sede.address;
     if (sede.lat !== undefined) update.lat = sede.lat;
     if (sede.lng !== undefined) update.lng = sede.lng;
     if (sede.consultationMinutes !== undefined) update.consultation_minutes = sede.consultationMinutes;
+    if (sede.allowSameDayBooking !== undefined) update.same_day_booking = sede.allowSameDayBooking;
     update.updated_at = new Date().toISOString();
 
-    await supabase.from('sede_config').update(update).eq('id', 1);
+    const { error } = await supabase.from('sede_config').update(update).eq('id', 1);
+    if (error) throw error;
     await loadData();
+  };
+
+  const setSameDayBooking = async (enabled: boolean) => {
+    await updateSede({ allowSameDayBooking: enabled });
+    if (!enabled) return;
+    const doctors = data.users.filter((u) => u.role === 'doctor');
+    for (const doctor of doctors) {
+      await ensureWeekdaysScheduled(doctor.cedula, 6, true);
+    }
   };
 
   const addUser = async (user: User) => {
@@ -865,7 +879,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Auto-seed every weekday (Mon-Fri) for the next `monthsAhead` months as
   // available, skipping days the doctor has explicitly disabled. Idempotent.
-  const ensureWeekdaysScheduled = async (doctorCedula: string, monthsAhead = 6) => {
+  const ensureWeekdaysScheduled = async (doctorCedula: string, monthsAhead = 6, includeToday = false) => {
     const { data: existingSched } = await supabase
       .from('doctor_schedule')
       .select('schedule_date')
@@ -884,7 +898,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const toInsert: { doctor_cedula: string; schedule_date: string; start_hour: string; end_hour: string }[] = [];
     const cursor = new Date(today);
-    cursor.setDate(cursor.getDate() + 1); // start tomorrow
+    if (!includeToday) cursor.setDate(cursor.getDate() + 1);
     while (cursor <= end) {
       const dow = cursor.getDay();
       if (dow >= 1 && dow <= 5) {
@@ -1051,6 +1065,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         markPresent,
         markAbsentAndReschedule,
         updateSede,
+        setSameDayBooking,
         addUser,
         removeUser,
         scheduleAppointment,

@@ -43,6 +43,7 @@ export interface SedeConfig {
   lat: number;
   lng: number;
   consultationMinutes: number;
+  allowSameDayBooking: boolean;
 }
 
 export interface DoctorScheduleEntry {

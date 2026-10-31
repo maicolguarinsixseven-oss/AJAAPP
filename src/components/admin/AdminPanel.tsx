@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Settings,
   MapPin,
@@ -19,8 +19,11 @@ import {
   Loader2,
   X,
   Search,
+  FlaskConical,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
+import { SedeSelector } from '@/components/admin/SedeSelector';
+import { TestModeTab } from '@/components/admin/TestModeTab';
 import type { Role, User as AppUser, SedeConfig } from '@/types';
 
 const DEFAULT_SPECIALTIES = [
@@ -34,7 +37,7 @@ interface AdminPanelProps {
   user: AppUser;
 }
 
-type Tab = 'sede' | 'staff' | 'params';
+type Tab = 'sede' | 'staff' | 'params' | 'test';
 
 type ToastType = 'success' | 'error';
 interface ToastState {
@@ -70,7 +73,7 @@ function Toast({ toast, onClose }: { toast: ToastState; onClose: () => void }) {
 }
 
 export function AdminPanel({ user }: AdminPanelProps) {
-  const { data, updateSede, addUser, removeUser, resetAll, updateDoctorSpecialty, getSpecialties, addSpecialty, updateSpecialty } = useApp();
+  const { data, updateSede, setSameDayBooking, addUser, removeUser, resetAll, updateDoctorSpecialty, getSpecialties, addSpecialty, updateSpecialty } = useApp();
   const [tab, setTab] = useState<Tab>('sede');
   const [deleteError, setDeleteError] = useState('');
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -86,6 +89,20 @@ export function AdminPanel({ user }: AdminPanelProps) {
       showToast('¡Parámetros de la sede actualizados y guardados en Supabase con éxito!', 'success');
     } catch {
       showToast('Error al guardar los parámetros. Revisa tu conexión e intenta nuevamente.', 'error');
+    }
+  };
+
+  const handleToggleSameDay = async (next: boolean) => {
+    try {
+      await setSameDayBooking(next);
+      showToast(
+        next
+          ? 'Modo prueba activado: se pueden agendar citas para hoy.'
+          : 'Modo prueba desactivado: se restaura la anticipación de un día.',
+        'success',
+      );
+    } catch {
+      showToast('Error al cambiar el modo prueba. Revisa tu conexión e intenta nuevamente.', 'error');
     }
   };
 
@@ -123,16 +140,17 @@ export function AdminPanel({ user }: AdminPanelProps) {
       </div>
 
       {/* Tab selector */}
-      <div className="grid grid-cols-3 gap-1 bg-slate-100 rounded-xl p-1 mb-4">
+      <div className="grid grid-cols-4 gap-1 bg-slate-100 rounded-xl p-1 mb-4">
         {[
           { key: 'sede' as Tab, label: 'Sede', icon: MapPin },
           { key: 'staff' as Tab, label: 'Personal', icon: Users },
           { key: 'params' as Tab, label: 'Parámetros', icon: Clock },
+          { key: 'test' as Tab, label: 'Prueba Test', icon: FlaskConical },
         ].map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
               tab === t.key
                 ? 'bg-white text-blue-800 shadow-sm'
                 : 'text-slate-500 hover:text-slate-600'
@@ -168,6 +186,9 @@ export function AdminPanel({ user }: AdminPanelProps) {
         />
       )}
       {tab === 'params' && <ParamsTab sede={data.sede} onSave={handleSaveSede} onReset={handleReset} />}
+      {tab === 'test' && (
+        <TestModeTab enabled={data.sede.allowSameDayBooking} onToggle={handleToggleSameDay} />
+      )}
     </div>
   );
 }
@@ -184,6 +205,13 @@ function SedeTab({
   const [lat, setLat] = useState(String(sede.lat));
   const [lng, setLng] = useState(String(sede.lng));
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setName(sede.name);
+    setAddress(sede.address);
+    setLat(String(sede.lat));
+    setLng(String(sede.lng));
+  }, [sede.name, sede.address, sede.lat, sede.lng]);
 
   const handleSave = () => {
     onSave({
@@ -202,6 +230,8 @@ function SedeTab({
         <Settings className="w-5 h-5 text-blue-700" />
         Datos de la Sede
       </h3>
+
+      <SedeSelector activeName={sede.name} onSelect={onSave} />
 
       <div>
         <label className="text-sm font-medium text-slate-600 mb-1.5 block">
