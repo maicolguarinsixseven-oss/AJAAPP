@@ -24,6 +24,7 @@ import {
 import { useApp } from '@/context/AppContext';
 import { SedeSelector } from '@/components/admin/SedeSelector';
 import { TestModeTab } from '@/components/admin/TestModeTab';
+import { TabStrip } from '@/components/TabStrip';
 import type { Role, User as AppUser, SedeConfig } from '@/types';
 
 const DEFAULT_SPECIALTIES = [
@@ -140,7 +141,7 @@ export function AdminPanel({ user }: AdminPanelProps) {
       </div>
 
       {/* Tab selector */}
-      <div className="grid grid-cols-4 gap-1 bg-slate-100 rounded-xl p-1 mb-4">
+      <TabStrip className="bg-slate-100 rounded-xl p-1 mb-4">
         {[
           { key: 'sede' as Tab, label: 'Sede', icon: MapPin },
           { key: 'staff' as Tab, label: 'Personal', icon: Users },
@@ -160,7 +161,7 @@ export function AdminPanel({ user }: AdminPanelProps) {
             {t.label}
           </button>
         ))}
-      </div>
+      </TabStrip>
 
       {deleteError && (
         <div className="mb-4 bg-red-50 rounded-xl p-3 flex items-center gap-2 animate-slide-up">
@@ -661,7 +662,7 @@ function StaffTab({
         </p>
 
         {/* Role sub-tabs */}
-        <div className="flex gap-1 bg-slate-100 rounded-xl p-1 mb-3 overflow-x-auto whitespace-nowrap scrollbar-none sm:grid sm:grid-cols-4">
+        <TabStrip className="bg-slate-100 rounded-xl p-1 mb-3">
           {roleTabConfig.map((rt) => (
             <button
               key={rt.key}
@@ -676,7 +677,7 @@ function StaffTab({
               <span>{rt.label}</span>
             </button>
           ))}
-        </div>
+        </TabStrip>
 
         {/* Search bar */}
         <div className="relative mb-3">

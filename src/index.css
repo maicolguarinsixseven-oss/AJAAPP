@@ -18,11 +18,30 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
-  .scrollbar-none {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+}
+
+@layer components {
+  .tab-strip {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
   }
-  .scrollbar-none::-webkit-scrollbar {
-    display: none;
+  .tab-strip > * {
+    flex: 1 0 auto;
+    white-space: nowrap;
+  }
+  .tab-strip::-webkit-scrollbar {
+    height: 4px;
+  }
+  .tab-strip::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .tab-strip::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
   }
 }

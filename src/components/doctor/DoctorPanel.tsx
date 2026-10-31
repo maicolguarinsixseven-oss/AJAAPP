@@ -30,6 +30,7 @@ import { useNow, formatCountdown } from '@/hooks/useNow';
 import { COUNTDOWN_SECONDS } from '@/types';
 import type { User as AppUser, Appointment } from '@/types';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { TabStrip } from '@/components/TabStrip';
 import { LiveLocationSwitch } from '@/components/doctor/LiveLocationSwitch';
 import { PatientDistanceNotice } from '@/components/doctor/PatientDistanceNotice';
 
@@ -229,7 +230,7 @@ export function DoctorPanel({ user }: DoctorPanelProps) {
       )}
 
       {/* View tabs */}
-      <div className="grid grid-cols-3 gap-1 bg-slate-100 rounded-xl p-1 mb-4">
+      <TabStrip className="bg-slate-100 rounded-xl p-1 mb-4">
         <button
           onClick={() => setView('queue')}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
@@ -257,7 +258,7 @@ export function DoctorPanel({ user }: DoctorPanelProps) {
           <CalendarDays className="w-4 h-4" />
           Disponibilidad
         </button>
-      </div>
+      </TabStrip>
 
       {view === 'upcoming' && (
         <ErrorBoundary fallbackTitle="Error en Citas Pendientes">

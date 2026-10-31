@@ -17,6 +17,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
+import { TabStrip } from '@/components/TabStrip';
 import type { User as AppUser, Appointment, DoctorScheduleEntry } from '@/types';
 
 const FALLBACK_SPECIALTIES = [
@@ -61,7 +62,7 @@ export function SecretaryPanel({ user: _user }: SecretaryPanelProps) {
       </div>
 
       {/* Tab selector */}
-      <div className="grid grid-cols-3 gap-1 bg-slate-100 rounded-xl p-1 mb-4">
+      <TabStrip className="bg-slate-100 rounded-xl p-1 mb-4">
         {[
           { key: 'schedule' as Tab, label: 'Agendar', icon: CalendarPlus },
           { key: 'register' as Tab, label: 'Pacientes', icon: UserPlus },
@@ -80,7 +81,7 @@ export function SecretaryPanel({ user: _user }: SecretaryPanelProps) {
             {t.label}
           </button>
         ))}
-      </div>
+      </TabStrip>
 
       {tab === 'schedule' && <ScheduleTab />}
       {tab === 'register' && <RegisterTab />}
