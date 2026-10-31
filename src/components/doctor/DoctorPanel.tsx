@@ -671,7 +671,7 @@ function UpcomingAppointmentsSection({ doctorCedula, appointments, onApptClick }
         (a) =>
           a.doctorCedula === doctorCedula &&
           a.scheduledDate &&
-          a.scheduledDate > todayStr &&
+          (a.scheduledDate > todayStr || (a.scheduledDate === todayStr && a.status === 'scheduled')) &&
           (a.status === 'scheduled' || a.status === 'checked-in' || a.status === 'rescheduled'),
       )
       .sort((a, b) => {

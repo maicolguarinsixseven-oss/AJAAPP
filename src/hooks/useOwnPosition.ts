@@ -42,7 +42,7 @@ export function useOwnPosition(enabled: boolean) {
         setPosition(null);
         setError('Activa el GPS para ver la distancia.');
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, [enabled]);
