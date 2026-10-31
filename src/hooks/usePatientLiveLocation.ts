@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { OwnPosition } from '@/hooks/useOwnPosition';
+import type { GeoPosition } from '@/lib/geolocation';
 
 export interface PatientLiveLocation {
   lat: number;
@@ -14,7 +14,7 @@ export function usePatientLocationPublishing(
   patientCedula: string,
   doctorCedula: string | undefined,
   enabled: boolean,
-  position: OwnPosition | null,
+  position: GeoPosition | null,
 ) {
   useEffect(() => {
     if (!enabled || !position || !doctorCedula) return;

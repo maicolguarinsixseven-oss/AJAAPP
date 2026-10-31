@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { calculateDistance } from '@/lib/distance';
+import { readPosition } from '@/lib/geolocation';
 
 export type GeoStatus = 'idle' | 'checking' | 'success' | 'too-far' | 'error' | 'simulated';
 
@@ -11,7 +12,7 @@ export interface GeoResult {
 
 export const CHECKIN_RADIUS_METERS = 100;
 
-export function useGeolocation(sedeLat: number, sedeLng: number) {
+export function useGeolocation(sedeLat: number, sedeLng: number, testMode: boolean) {
   const [result, setResult] = useState<GeoResult>({
     status: 'idle',
     distance: null,
@@ -21,53 +22,29 @@ export function useGeolocation(sedeLat: number, sedeLng: number) {
 
   const checkLocation = useCallback((): Promise<GeoResult> => {
     setLoading(true);
-    return new Promise((resolve) => {
-      if (!navigator.geolocation) {
+    return readPosition(testMode).then(
+      (position) => {
+        const distance = calculateDistance(position.lat, position.lng, sedeLat, sedeLng);
+        const withinRange = distance <= CHECKIN_RADIUS_METERS;
         const r: GeoResult = {
-          status: 'error',
-          distance: null,
-          message: 'Geolocalización no disponible en este dispositivo.',
+          status: withinRange ? 'success' : 'too-far',
+          distance: Math.round(distance),
+          message: withinRange
+            ? `Estás a ${Math.round(distance)}m de la sede. Check-in autorizado.`
+            : `Estás a ${Math.round(distance)}m de la sede. Acércate a menos de ${CHECKIN_RADIUS_METERS}m para hacer check-in.`,
         };
         setResult(r);
         setLoading(false);
-        resolve(r);
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const distance = calculateDistance(
-            position.coords.latitude,
-            position.coords.longitude,
-            sedeLat,
-            sedeLng,
-          );
-          const withinRange = distance <= CHECKIN_RADIUS_METERS;
-          const r: GeoResult = {
-            status: withinRange ? 'success' : 'too-far',
-            distance: Math.round(distance),
-            message: withinRange
-              ? `Estás a ${Math.round(distance)}m de la sede. Check-in autorizado.`
-              : `Estás a ${Math.round(distance)}m de la sede. Acércate a menos de ${CHECKIN_RADIUS_METERS}m para hacer check-in.`,
-          };
-          setResult(r);
-          setLoading(false);
-          resolve(r);
-        },
-        () => {
-          const r: GeoResult = {
-            status: 'error',
-            distance: null,
-            message: 'No se pudo acceder a tu ubicación. Verifica los permisos de GPS.',
-          };
-          setResult(r);
-          setLoading(false);
-          resolve(r);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-      );
-    });
-  }, [sedeLat, sedeLng]);
+        return r;
+      },
+      (err: Error) => {
+        const r: GeoResult = { status: 'error', distance: null, message: err.message };
+        setResult(r);
+        setLoading(false);
+        return r;
+      },
+    );
+  }, [sedeLat, sedeLng, testMode]);
 
   const simulateNear = useCallback(() => {
     const r: GeoResult = {

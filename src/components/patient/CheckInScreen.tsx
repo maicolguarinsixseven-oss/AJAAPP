@@ -15,6 +15,7 @@ export function CheckInScreen({ user, onCheckedIn }: CheckInScreenProps) {
   const { checkLocation, simulateNear, result, loading } = useGeolocation(
     data.sede.lat,
     data.sede.lng,
+    data.sede.allowSameDayBooking,
   );
   const doctorCedula = data.appointments.find(
     (a) => a.patientCedula === user.cedula && a.doctorCedula,

@@ -15,7 +15,7 @@ export function PatientDistanceNotice({ doctorCedula, patientCedula, sede }: Pat
   const doctorLive = useDoctorLiveLocation(doctorCedula);
   const sharing = doctorLive !== null;
   const patientLive = usePatientLiveLocation(sharing ? patientCedula : undefined);
-  const own = useOwnPosition(true);
+  const own = useOwnPosition(true, sede.allowSameDayBooking);
 
   const target = sharing ? patientLive : sede;
   const distance =

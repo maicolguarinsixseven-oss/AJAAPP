@@ -15,7 +15,7 @@ interface CheckInZoneCardProps {
 export function CheckInZoneCard({ sede, patientCedula, doctorCedula }: CheckInZoneCardProps) {
   const doctorLive = useDoctorLiveLocation(doctorCedula);
   const sharing = doctorLive !== null;
-  const own = useOwnPosition(true);
+  const own = useOwnPosition(true, sede.allowSameDayBooking);
   usePatientLocationPublishing(patientCedula, doctorCedula, sharing, own.position);
 
   return (

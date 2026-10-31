@@ -1,26 +1,8 @@
 import { useEffect, useState } from 'react';
+import { type GeoPosition, TEST_FALLBACK_POSITION, describeGeolocationError } from '@/lib/geolocation';
 
-export interface OwnPosition {
-  lat: number;
-  lng: number;
-}
-
-export function readCurrentPosition(): Promise<OwnPosition> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocalización no disponible en este dispositivo.'));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => reject(new Error('No se pudo acceder a tu ubicación.')),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-    );
-  });
-}
-
-export function useOwnPosition(enabled: boolean) {
-  const [position, setPosition] = useState<OwnPosition | null>(null);
+export function useOwnPosition(enabled: boolean, testMode: boolean) {
+  const [position, setPosition] = useState<GeoPosition | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -30,7 +12,12 @@ export function useOwnPosition(enabled: boolean) {
       return;
     }
     if (!navigator.geolocation) {
-      setError('Geolocalización no disponible en este dispositivo.');
+      if (testMode) {
+        setPosition(TEST_FALLBACK_POSITION);
+        setError('');
+      } else {
+        setError('Geolocalización no disponible en este dispositivo.');
+      }
       return;
     }
     const watchId = navigator.geolocation.watchPosition(
@@ -38,14 +25,19 @@ export function useOwnPosition(enabled: boolean) {
         setError('');
         setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       },
-      () => {
+      (err) => {
+        if (testMode) {
+          setError('');
+          setPosition(TEST_FALLBACK_POSITION);
+          return;
+        }
         setPosition(null);
-        setError('Activa el GPS para ver la distancia.');
+        setError(describeGeolocationError(err));
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [enabled]);
+  }, [enabled, testMode]);
 
   return { position, error };
 }

@@ -1,4 +1,5 @@
 import { MapPin } from 'lucide-react';
+import { useApp } from '@/context/AppContext';
 import { useLiveLocationSharing } from '@/hooks/useLiveLocationSharing';
 
 interface LiveLocationSwitchProps {
@@ -6,7 +7,8 @@ interface LiveLocationSwitchProps {
 }
 
 export function LiveLocationSwitch({ doctorCedula }: LiveLocationSwitchProps) {
-  const { sharing, error, setShareEnabled } = useLiveLocationSharing(doctorCedula);
+  const { data } = useApp();
+  const { sharing, error, setShareEnabled } = useLiveLocationSharing(doctorCedula, data.sede.allowSameDayBooking);
 
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 animate-slide-up">

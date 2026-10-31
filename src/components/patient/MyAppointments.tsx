@@ -53,6 +53,7 @@ export function MyAppointments({ user, onCheckedIn }: MyAppointmentsProps) {
   const { checkLocation, simulateNear, result, loading: geoLoading } = useGeolocation(
     data.sede.lat,
     data.sede.lng,
+    data.sede.allowSameDayBooking,
   );
   const now = useNow(1000);
   const [checkInBusy, setCheckInBusy] = useState(false);

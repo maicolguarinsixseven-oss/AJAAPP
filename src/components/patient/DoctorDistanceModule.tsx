@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Loader2, Navigation, Radio, MapPin } from 'lucide-react';
 import type { SedeConfig } from '@/types';
 import { fetchDoctorLiveLocation } from '@/hooks/useDoctorLiveLocation';
-import { readCurrentPosition } from '@/hooks/useOwnPosition';
+import { readPosition } from '@/lib/geolocation';
 import { calculateDistance, formatDistance } from '@/lib/distance';
 
 interface DoctorDistanceModuleProps {
@@ -25,7 +25,7 @@ export function DoctorDistanceModule({ sede, doctorCedula }: DoctorDistanceModul
     setError('');
     try {
       const [position, doctorLive] = await Promise.all([
-        readCurrentPosition(),
+        readPosition(sede.allowSameDayBooking),
         doctorCedula ? fetchDoctorLiveLocation(doctorCedula) : Promise.resolve(null),
       ]);
       const target = doctorLive ?? sede;

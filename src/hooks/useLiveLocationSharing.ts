@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { TEST_FALLBACK_POSITION, describeGeolocationError } from '@/lib/geolocation';
 
 const HEARTBEAT_MS = 15000;
 
@@ -8,7 +9,7 @@ interface SharedPosition {
   lng: number;
 }
 
-export function useLiveLocationSharing(doctorCedula: string) {
+export function useLiveLocationSharing(doctorCedula: string, testMode: boolean) {
   const [sharing, setSharing] = useState(false);
   const [error, setError] = useState('');
   const watchIdRef = useRef<number | null>(null);
@@ -53,7 +54,13 @@ export function useLiveLocationSharing(doctorCedula: string) {
         return;
       }
       if (!navigator.geolocation) {
-        setError('Geolocalización no disponible en este dispositivo.');
+        if (!testMode) {
+          setError('Geolocalización no disponible en este dispositivo.');
+          return;
+        }
+        setSharing(true);
+        lastPositionRef.current = TEST_FALLBACK_POSITION;
+        await publish(true, TEST_FALLBACK_POSITION);
         return;
       }
       stopWatching();
@@ -67,17 +74,22 @@ export function useLiveLocationSharing(doctorCedula: string) {
           };
           publish(true, lastPositionRef.current);
         },
-        () => {
+        (err) => {
+          if (testMode) {
+            lastPositionRef.current = TEST_FALLBACK_POSITION;
+            publish(true, TEST_FALLBACK_POSITION);
+            return;
+          }
           stopWatching();
           lastPositionRef.current = null;
           setSharing(false);
-          setError('No se pudo acceder a tu ubicación. Verifica los permisos de GPS.');
+          setError(describeGeolocationError(err));
           publish(false, null);
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
       );
     },
-    [publish, stopWatching],
+    [publish, stopWatching, testMode],
   );
 
   useEffect(() => {
