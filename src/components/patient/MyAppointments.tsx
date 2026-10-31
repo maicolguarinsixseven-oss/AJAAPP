@@ -15,7 +15,8 @@ import {
   Timer,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { useGeolocation, CHECKIN_RADIUS_METERS } from '@/hooks/useGeolocation';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { CheckInZoneCard } from '@/components/patient/CheckInZoneCard';
 import { useNow, formatCountdown } from '@/hooks/useNow';
 import { COUNTDOWN_SECONDS } from '@/types';
 import type { User as AppUser, Appointment } from '@/types';
@@ -46,6 +47,9 @@ function formatTime12h(time24: string): string {
 
 export function MyAppointments({ user, onCheckedIn }: MyAppointmentsProps) {
   const { data, getMyScheduledAppointments, getMyAppointment, getQueuePosition, checkIn } = useApp();
+  const doctorCedula = data.appointments.find(
+    (a) => a.patientCedula === user.cedula && a.doctorCedula,
+  )?.doctorCedula;
   const { checkLocation, simulateNear, result, loading: geoLoading } = useGeolocation(
     data.sede.lat,
     data.sede.lng,
@@ -198,16 +202,7 @@ export function MyAppointments({ user, onCheckedIn }: MyAppointmentsProps) {
           </p>
 
           {/* Sede info */}
-          <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-2.5">
-            <MapPin className="w-4 h-4 text-blue-700 flex-shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-slate-800 text-sm">{data.sede.name}</p>
-              <p className="text-sm text-slate-500">{data.sede.address}</p>
-              <p className="text-xs text-blue-700 mt-1">
-                Zona de check-in: {CHECKIN_RADIUS_METERS}m a la redonda
-              </p>
-            </div>
-          </div>
+          <CheckInZoneCard sede={data.sede} doctorCedula={doctorCedula} />
 
           {!showCheckInForm ? (
             <button

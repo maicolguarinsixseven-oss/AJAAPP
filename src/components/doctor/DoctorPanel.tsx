@@ -30,6 +30,7 @@ import { useNow, formatCountdown } from '@/hooks/useNow';
 import { COUNTDOWN_SECONDS } from '@/types';
 import type { User as AppUser, Appointment } from '@/types';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { LiveLocationSwitch } from '@/components/doctor/LiveLocationSwitch';
 
 interface DoctorPanelProps {
   user: AppUser;
@@ -284,6 +285,8 @@ export function DoctorPanel({ user }: DoctorPanelProps) {
 
       {view === 'queue' && (
         <>
+      <LiveLocationSwitch doctorCedula={user.cedula} />
+
       {/* Metrics */}
       <div className="grid grid-cols-2 gap-3 mb-4 animate-slide-up">
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">

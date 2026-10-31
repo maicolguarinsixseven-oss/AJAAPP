@@ -6,7 +6,6 @@ export const DEFAULT_SEDE: SedeConfig = {
   lat: 11.2358,
   lng: -74.2083,
   consultationMinutes: 15,
-  geofenceRadius: 200,
 };
 
 export function createMockData(): AppData {

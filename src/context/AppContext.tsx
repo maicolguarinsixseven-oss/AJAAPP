@@ -98,7 +98,6 @@ interface DbSedeConfig {
   lat: number;
   lng: number;
   consultation_minutes: number;
-  geofence_radius: number;
 }
 
 interface DbDoctorAvailability {
@@ -256,7 +255,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         lat: s.lat,
         lng: s.lng,
         consultationMinutes: s.consultation_minutes,
-        geofenceRadius: s.geofence_radius,
       };
     }
 
@@ -629,7 +627,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (sede.lat !== undefined) update.lat = sede.lat;
     if (sede.lng !== undefined) update.lng = sede.lng;
     if (sede.consultationMinutes !== undefined) update.consultation_minutes = sede.consultationMinutes;
-    if (sede.geofenceRadius !== undefined) update.geofence_radius = sede.geofenceRadius;
     update.updated_at = new Date().toISOString();
 
     await supabase.from('sede_config').update(update).eq('id', 1);

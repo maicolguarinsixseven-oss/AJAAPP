@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { MapPin, User, CreditCard, Navigation, Loader2, CheckCircle2, AlertTriangle, Stethoscope } from 'lucide-react';
-import { useGeolocation, CHECKIN_RADIUS_METERS } from '@/hooks/useGeolocation';
+import { User, CreditCard, Navigation, Loader2, CheckCircle2, AlertTriangle, Stethoscope, MapPin } from 'lucide-react';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import { useApp } from '@/context/AppContext';
+import { CheckInZoneCard } from '@/components/patient/CheckInZoneCard';
 import type { User as AppUser } from '@/types';
 
 interface CheckInScreenProps {
@@ -15,6 +16,9 @@ export function CheckInScreen({ user, onCheckedIn }: CheckInScreenProps) {
     data.sede.lat,
     data.sede.lng,
   );
+  const doctorCedula = data.appointments.find(
+    (a) => a.patientCedula === user.cedula && a.doctorCedula,
+  )?.doctorCedula;
   const [name, setName] = useState(user.name);
   const [cedula, setCedula] = useState(user.cedula);
   const [formError, setFormError] = useState('');
@@ -58,19 +62,8 @@ export function CheckInScreen({ user, onCheckedIn }: CheckInScreenProps) {
       </div>
 
       {/* Sede info */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 animate-slide-up">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-            <MapPin className="w-5 h-5 text-blue-700" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-800 text-sm">{data.sede.name}</p>
-            <p className="text-sm text-slate-500">{data.sede.address}</p>
-            <p className="text-xs text-blue-700 mt-1">
-              Zona de check-in: {CHECKIN_RADIUS_METERS}m a la redonda
-            </p>
-          </div>
-        </div>
+      <div className="mb-4 animate-slide-up">
+        <CheckInZoneCard sede={data.sede} doctorCedula={doctorCedula} />
       </div>
 
       {/* Geolocation */}

@@ -835,19 +835,17 @@ function ParamsTab({
   onSave,
   onReset,
 }: {
-  sede: { consultationMinutes: number; geofenceRadius: number };
+  sede: { consultationMinutes: number };
   onSave: (s: Partial<typeof sede>) => void;
   onReset: () => void;
 }) {
   const [consultationMinutes, setConsultationMinutes] = useState(String(sede.consultationMinutes));
-  const [geofenceRadius, setGeofenceRadius] = useState(String(sede.geofenceRadius));
   const [saved, setSaved] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
   const handleSave = () => {
     onSave({
       consultationMinutes: parseInt(consultationMinutes) || 15,
-      geofenceRadius: parseInt(geofenceRadius) || 200,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -876,24 +874,6 @@ function ParamsTab({
           />
           <p className="text-xs text-slate-400 mt-1.5">
             Se usa para calcular el tiempo estimado de espera de cada paciente.
-          </p>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-slate-600 mb-1.5 block">
-            Radio de Check-in GPS (metros)
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={geofenceRadius}
-            onChange={(e) => setGeofenceRadius(e.target.value.replace(/\D/g, ''))}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200
-                       focus:border-blue-600 focus:ring-2 focus:ring-blue-100
-                       outline-none transition-all text-slate-800"
-          />
-          <p className="text-xs text-slate-400 mt-1.5">
-            El paciente debe estar dentro de este radio para autorizar el check-in.
           </p>
         </div>
 

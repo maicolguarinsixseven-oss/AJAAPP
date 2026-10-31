@@ -43,7 +43,6 @@ export interface SedeConfig {
   lat: number;
   lng: number;
   consultationMinutes: number;
-  geofenceRadius: number;
 }
 
 export interface DoctorScheduleEntry {
