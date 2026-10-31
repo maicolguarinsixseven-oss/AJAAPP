@@ -19,7 +19,9 @@ export interface GeoResult {
   message: string;
 }
 
-export function useGeolocation(sedeLat: number, sedeLng: number, geofenceRadius: number) {
+export const CHECKIN_RADIUS_METERS = 100;
+
+export function useGeolocation(sedeLat: number, sedeLng: number) {
   const [result, setResult] = useState<GeoResult>({
     status: 'idle',
     distance: null,
@@ -50,13 +52,13 @@ export function useGeolocation(sedeLat: number, sedeLng: number, geofenceRadius:
             sedeLat,
             sedeLng,
           );
-          const withinRange = distance <= geofenceRadius;
+          const withinRange = distance <= CHECKIN_RADIUS_METERS;
           const r: GeoResult = {
             status: withinRange ? 'success' : 'too-far',
             distance: Math.round(distance),
             message: withinRange
               ? `Estás a ${Math.round(distance)}m de la sede. Check-in autorizado.`
-              : `Estás a ${Math.round(distance)}m de la sede. Acércate a menos de ${geofenceRadius}m para hacer check-in.`,
+              : `Estás a ${Math.round(distance)}m de la sede. Acércate a menos de ${CHECKIN_RADIUS_METERS}m para hacer check-in.`,
           };
           setResult(r);
           setLoading(false);
@@ -75,7 +77,7 @@ export function useGeolocation(sedeLat: number, sedeLng: number, geofenceRadius:
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
       );
     });
-  }, [sedeLat, sedeLng, geofenceRadius]);
+  }, [sedeLat, sedeLng]);
 
   const simulateNear = useCallback(() => {
     const r: GeoResult = {

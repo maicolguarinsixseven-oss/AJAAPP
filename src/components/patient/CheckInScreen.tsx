@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MapPin, User, CreditCard, Navigation, Loader2, CheckCircle2, AlertTriangle, Stethoscope } from 'lucide-react';
-import { useGeolocation } from '@/hooks/useGeolocation';
+import { useGeolocation, CHECKIN_RADIUS_METERS } from '@/hooks/useGeolocation';
 import { useApp } from '@/context/AppContext';
 import type { User as AppUser } from '@/types';
 
@@ -14,7 +14,6 @@ export function CheckInScreen({ user, onCheckedIn }: CheckInScreenProps) {
   const { checkLocation, simulateNear, result, loading } = useGeolocation(
     data.sede.lat,
     data.sede.lng,
-    data.sede.geofenceRadius,
   );
   const [name, setName] = useState(user.name);
   const [cedula, setCedula] = useState(user.cedula);
@@ -68,7 +67,7 @@ export function CheckInScreen({ user, onCheckedIn }: CheckInScreenProps) {
             <p className="font-semibold text-slate-800 text-sm">{data.sede.name}</p>
             <p className="text-sm text-slate-500">{data.sede.address}</p>
             <p className="text-xs text-blue-700 mt-1">
-              Zona de check-in: {data.sede.geofenceRadius}m a la redonda
+              Zona de check-in: {CHECKIN_RADIUS_METERS}m a la redonda
             </p>
           </div>
         </div>

@@ -15,7 +15,7 @@ import {
   Timer,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { useGeolocation } from '@/hooks/useGeolocation';
+import { useGeolocation, CHECKIN_RADIUS_METERS } from '@/hooks/useGeolocation';
 import { useNow, formatCountdown } from '@/hooks/useNow';
 import { COUNTDOWN_SECONDS } from '@/types';
 import type { User as AppUser, Appointment } from '@/types';
@@ -49,7 +49,6 @@ export function MyAppointments({ user, onCheckedIn }: MyAppointmentsProps) {
   const { checkLocation, simulateNear, result, loading: geoLoading } = useGeolocation(
     data.sede.lat,
     data.sede.lng,
-    data.sede.geofenceRadius,
   );
   const now = useNow(1000);
   const [checkInBusy, setCheckInBusy] = useState(false);
@@ -205,7 +204,7 @@ export function MyAppointments({ user, onCheckedIn }: MyAppointmentsProps) {
               <p className="font-semibold text-slate-800 text-sm">{data.sede.name}</p>
               <p className="text-sm text-slate-500">{data.sede.address}</p>
               <p className="text-xs text-blue-700 mt-1">
-                Zona de check-in: {data.sede.geofenceRadius}m a la redonda
+                Zona de check-in: {CHECKIN_RADIUS_METERS}m a la redonda
               </p>
             </div>
           </div>
