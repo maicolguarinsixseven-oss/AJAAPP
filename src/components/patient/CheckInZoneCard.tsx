@@ -2,14 +2,26 @@ import { MapPin, Radio } from 'lucide-react';
 import type { SedeConfig } from '@/types';
 import { CHECKIN_RADIUS_METERS } from '@/hooks/useGeolocation';
 import { useDoctorLiveLocation } from '@/hooks/useDoctorLiveLocation';
+import { useOwnPosition } from '@/hooks/useOwnPosition';
+import { usePatientLocationPublishing } from '@/hooks/usePatientLiveLocation';
+import { calculateDistance, formatDistance } from '@/lib/distance';
 
 interface CheckInZoneCardProps {
   sede: SedeConfig;
+  patientCedula: string;
   doctorCedula?: string;
 }
 
-export function CheckInZoneCard({ sede, doctorCedula }: CheckInZoneCardProps) {
-  const liveLocation = useDoctorLiveLocation(doctorCedula);
+export function CheckInZoneCard({ sede, patientCedula, doctorCedula }: CheckInZoneCardProps) {
+  const doctorLive = useDoctorLiveLocation(doctorCedula);
+  const sharing = doctorLive !== null;
+  const own = useOwnPosition(true);
+  usePatientLocationPublishing(patientCedula, doctorCedula, sharing, own.position);
+
+  const target = sharing && doctorLive ? doctorLive : sede;
+  const distance = own.position
+    ? calculateDistance(own.position.lat, own.position.lng, target.lat, target.lng)
+    : null;
 
   return (
     <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-2.5">
@@ -20,12 +32,19 @@ export function CheckInZoneCard({ sede, doctorCedula }: CheckInZoneCardProps) {
         <p className="text-xs text-blue-700 mt-1">
           Zona de check-in: {CHECKIN_RADIUS_METERS}m a la redonda
         </p>
-        {liveLocation && (
-          <p className="flex items-center gap-1.5 text-xs text-emerald-700 mt-1.5">
-            <Radio className="w-3.5 h-3.5 animate-pulse" />
-            El médico comparte su ubicación en vivo: {liveLocation.lat.toFixed(5)}, {liveLocation.lng.toFixed(5)}
-          </p>
-        )}
+        <div className="mt-2 pt-2 border-t border-blue-100">
+          {distance !== null ? (
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+              {sharing && <Radio className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />}
+              {formatDistance(distance)}
+              <span className="text-xs font-normal text-slate-500">
+                {sharing ? 'de tu médico (en vivo)' : 'del centro de atención'}
+              </span>
+            </p>
+          ) : (
+            <p className="text-xs text-slate-500">{own.error || 'Obteniendo tu ubicación...'}</p>
+          )}
+        </div>
       </div>
     </div>
   );

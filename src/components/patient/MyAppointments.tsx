@@ -202,7 +202,7 @@ export function MyAppointments({ user, onCheckedIn }: MyAppointmentsProps) {
           </p>
 
           {/* Sede info */}
-          <CheckInZoneCard sede={data.sede} doctorCedula={doctorCedula} />
+          <CheckInZoneCard sede={data.sede} patientCedula={user.cedula} doctorCedula={doctorCedula} />
 
           {!showCheckInForm ? (
             <button

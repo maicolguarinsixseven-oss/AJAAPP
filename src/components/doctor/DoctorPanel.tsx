@@ -31,6 +31,7 @@ import { COUNTDOWN_SECONDS } from '@/types';
 import type { User as AppUser, Appointment } from '@/types';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LiveLocationSwitch } from '@/components/doctor/LiveLocationSwitch';
+import { PatientDistanceNotice } from '@/components/doctor/PatientDistanceNotice';
 
 interface DoctorPanelProps {
   user: AppUser;
@@ -334,6 +335,13 @@ export function DoctorPanel({ user }: DoctorPanelProps) {
           <p className="text-lg font-bold mb-3">
             #{String(calledPatient.ticketNumber).padStart(2, '0')} · {calledPatient.patientName}
           </p>
+          <div className="text-left mb-3">
+            <PatientDistanceNotice
+              doctorCedula={user.cedula}
+              patientCedula={calledPatient.patientCedula}
+              sede={data.sede}
+            />
+          </div>
 
           <div className="inline-flex items-center gap-2 bg-white/15 rounded-2xl px-5 py-2.5 mb-3">
             <span className="text-3xl font-extrabold font-mono tracking-tight">

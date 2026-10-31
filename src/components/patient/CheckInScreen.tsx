@@ -63,7 +63,7 @@ export function CheckInScreen({ user, onCheckedIn }: CheckInScreenProps) {
 
       {/* Sede info */}
       <div className="mb-4 animate-slide-up">
-        <CheckInZoneCard sede={data.sede} doctorCedula={doctorCedula} />
+        <CheckInZoneCard sede={data.sede} patientCedula={user.cedula} doctorCedula={doctorCedula} />
       </div>
 
       {/* Geolocation */}
