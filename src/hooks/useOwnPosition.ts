@@ -5,6 +5,20 @@ export interface OwnPosition {
   lng: number;
 }
 
+export function readCurrentPosition(): Promise<OwnPosition> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocalización no disponible en este dispositivo.'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => reject(new Error('No se pudo acceder a tu ubicación.')),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  });
+}
+
 export function useOwnPosition(enabled: boolean) {
   const [position, setPosition] = useState<OwnPosition | null>(null);
   const [error, setError] = useState('');

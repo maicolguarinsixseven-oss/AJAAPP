@@ -1,10 +1,39 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
+const HEARTBEAT_MS = 15000;
+
+interface SharedPosition {
+  lat: number;
+  lng: number;
+}
+
 export function useLiveLocationSharing(doctorCedula: string) {
   const [sharing, setSharing] = useState(false);
   const [error, setError] = useState('');
   const watchIdRef = useRef<number | null>(null);
+  const lastPositionRef = useRef<SharedPosition | null>(null);
+
+  const publish = useCallback(
+    async (isSharing: boolean, position: SharedPosition | null) => {
+      const { error: upsertError } = await supabase
+        .from('doctor_live_location')
+        .upsert(
+          {
+            doctor_cedula: doctorCedula,
+            lat: position?.lat ?? null,
+            lng: position?.lng ?? null,
+            is_sharing: isSharing,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'doctor_cedula' },
+        );
+      if (upsertError) {
+        setError('No se pudo guardar el estado de tu ubicación. Intenta de nuevo.');
+      }
+    },
+    [doctorCedula],
+  );
 
   const stopWatching = useCallback(() => {
     if (watchIdRef.current !== null) {
@@ -13,36 +42,14 @@ export function useLiveLocationSharing(doctorCedula: string) {
     }
   }, []);
 
-  const publish = useCallback(
-    async (lat: number | null, lng: number | null, isSharing: boolean) => {
-      const { error: upsertError } = await supabase
-        .from('doctor_live_location')
-        .upsert(
-          {
-            doctor_cedula: doctorCedula,
-            lat,
-            lng,
-            is_sharing: isSharing,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'doctor_cedula' },
-        );
-      if (upsertError) {
-        setError('No se pudo actualizar tu ubicación. Intenta de nuevo.');
-        return false;
-      }
-      return true;
-    },
-    [doctorCedula],
-  );
-
   const setShareEnabled = useCallback(
     async (enabled: boolean) => {
       setError('');
       if (!enabled) {
         stopWatching();
+        lastPositionRef.current = null;
         setSharing(false);
-        await publish(null, null, false);
+        await publish(false, null);
         return;
       }
       if (!navigator.geolocation) {
@@ -50,16 +57,22 @@ export function useLiveLocationSharing(doctorCedula: string) {
         return;
       }
       stopWatching();
+      setSharing(true);
+      await publish(true, null);
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
-          setSharing(true);
-          publish(position.coords.latitude, position.coords.longitude, true);
+          lastPositionRef.current = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          publish(true, lastPositionRef.current);
         },
         () => {
           stopWatching();
+          lastPositionRef.current = null;
           setSharing(false);
           setError('No se pudo acceder a tu ubicación. Verifica los permisos de GPS.');
-          publish(null, null, false);
+          publish(false, null);
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
       );
@@ -68,12 +81,33 @@ export function useLiveLocationSharing(doctorCedula: string) {
   );
 
   useEffect(() => {
-    publish(null, null, false);
+    let cancelled = false;
+    supabase
+      .from('doctor_live_location')
+      .select('is_sharing')
+      .eq('doctor_cedula', doctorCedula)
+      .maybeSingle()
+      .then(({ data, error: readError }) => {
+        if (cancelled) return;
+        if (readError) {
+          setError('No se pudo cargar el estado de tu ubicación.');
+          return;
+        }
+        if (data?.is_sharing) setShareEnabled(true);
+      });
     return () => {
+      cancelled = true;
       stopWatching();
-      publish(null, null, false);
     };
-  }, [publish, stopWatching]);
+  }, [doctorCedula, setShareEnabled, stopWatching]);
+
+  useEffect(() => {
+    if (!sharing) return;
+    const id = window.setInterval(() => {
+      if (lastPositionRef.current) publish(true, lastPositionRef.current);
+    }, HEARTBEAT_MS);
+    return () => window.clearInterval(id);
+  }, [sharing, publish]);
 
   return { sharing, error, setShareEnabled };
 }
