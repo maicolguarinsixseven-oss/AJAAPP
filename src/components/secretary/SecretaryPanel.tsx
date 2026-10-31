@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { memo, useCallback, useState, useRef, useEffect } from 'react';
 import {
   CalendarPlus,
   Search,
@@ -598,7 +598,35 @@ interface DoctorDayCalendarProps {
   onSelectDate: (date: string) => void;
 }
 
+const CalendarDayCell = memo(function CalendarDayCell({
+  day,
+  dateStr,
+  disabled,
+  cellClass,
+  onSelect,
+}: {
+  day: number;
+  dateStr: string;
+  disabled: boolean;
+  cellClass: string;
+  onSelect: (dateStr: string) => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onSelect(dateStr)}
+      className={`aspect-square rounded-lg text-xs font-medium transition-all flex items-center justify-center touch-manipulation ${cellClass}`}
+    >
+      {day}
+    </button>
+  );
+});
+
 function DoctorDayCalendar({ schedule, appointments, selectedDate, allowSameDay, onSelectDate }: DoctorDayCalendarProps) {
+  const onSelectRef = useRef(onSelectDate);
+  onSelectRef.current = onSelectDate;
+  const handleSelect = useCallback((d: string) => onSelectRef.current(d), []);
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -715,15 +743,14 @@ function DoctorDayCalendar({ schedule, appointments, selectedDate, allowSameDay,
           if (isSelected) cellClass += ' ring-2 ring-teal-400 ring-offset-1';
 
           return (
-            <button
+            <CalendarDayCell
               key={idx}
-              type="button"
+              day={day}
+              dateStr={dateStr}
               disabled={status === 'full' || status === 'off' || status === 'past'}
-              onClick={() => onSelectDate(dateStr)}
-              className={`aspect-square rounded-lg text-xs font-medium transition-all flex items-center justify-center ${cellClass}`}
-            >
-              {day}
-            </button>
+              cellClass={cellClass}
+              onSelect={handleSelect}
+            />
           );
         })}
       </div>

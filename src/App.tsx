@@ -26,7 +26,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-6">
-          <h1 className="text-2xl font-extrabold text-slate-800 mb-4">AJA' APP</h1>
+          <h1 className="text-2xl font-extrabold text-slate-800 mb-4">Algo salió mal</h1>
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 text-center max-w-sm">
             <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-7 h-7 text-red-500" />
@@ -79,9 +79,8 @@ function AppContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50/70 to-white/70 flex flex-col items-center justify-center px-6">
-        <h1 className="text-2xl font-extrabold text-slate-800 mb-4">AJA' APP</h1>
         <AppLogoMark size={80} className="mb-4 animate-pulse" />
-        <p className="text-slate-500 text-sm">Cargando AJA' APP...</p>
+        <p className="text-slate-500 text-sm">Cargando...</p>
       </div>
     );
   }
