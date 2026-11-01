@@ -420,13 +420,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await loadData();
   };
 
-  const login = async (cedula: string): Promise<User | null> => {
+ const login = async (cedula: string): Promise<User | null> => {
+    console.log('Intentando iniciar sesión con cédula:', cedula.trim());
+
     const { data: userRow, error } = await supabase
       .from('users')
       .select('*')
       .eq('cedula', cedula.trim())
       .maybeSingle();
-    if (error || !userRow) return null;
+
+    if (error) {
+      console.error('Error devuelto por Supabase en login:', error);
+      return null;
+    }
+
+    if (!userRow) {
+      console.warn('No se encontró ningún usuario con esa cédula en la tabla users.');
+      return null;
+    }
+
+    console.log('Usuario encontrado en Supabase:', userRow);
     const user = mapUser(userRow as DbUser);
     setCurrentUser(user);
     localStorage.setItem(SESSION_KEY, user.cedula);
