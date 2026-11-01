@@ -1,10 +1,10 @@
-import { MapPin } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 import type { SedeConfig } from '@/types';
 import { CHECKIN_RADIUS_METERS } from '@/hooks/useGeolocation';
 import { useDoctorLiveLocation } from '@/hooks/useDoctorLiveLocation';
 import { useOwnPosition } from '@/hooks/useOwnPosition';
 import { usePatientLocationPublishing } from '@/hooks/usePatientLiveLocation';
-import { DoctorDistanceModule } from '@/components/patient/DoctorDistanceModule';
+import { calculateDistance, formatDistance } from '@/lib/distance';
 
 interface CheckInZoneCardProps {
   sede: SedeConfig;
@@ -18,6 +18,17 @@ export function CheckInZoneCard({ sede, patientCedula, doctorCedula }: CheckInZo
   const own = useOwnPosition(true, sede.allowSameDayBooking);
   usePatientLocationPublishing(patientCedula, doctorCedula, sharing, own.position);
 
+  const distance = own.position
+    ? calculateDistance(own.position.lat, own.position.lng, sede.lat, sede.lng)
+    : null;
+
+  let distanceText: string;
+  if (distance !== null) {
+    distanceText = formatDistance(distance);
+  } else {
+    distanceText = own.error || 'Obteniendo tu ubicación...';
+  }
+
   return (
     <div className="bg-blue-50 rounded-xl p-3">
       <div className="flex items-start gap-2.5">
@@ -30,7 +41,13 @@ export function CheckInZoneCard({ sede, patientCedula, doctorCedula }: CheckInZo
           </p>
         </div>
       </div>
-      <DoctorDistanceModule sede={sede} doctorCedula={doctorCedula} />
+      <div className="mt-3 pt-3 border-t border-blue-100 flex items-center justify-between gap-3">
+        <p className="flex items-center gap-1.5 text-xs text-slate-600">
+          <Navigation className="w-3.5 h-3.5 text-blue-700" />
+          Ver distancia al centro de atención
+        </p>
+        <p className="text-sm font-semibold text-slate-800 text-right">{distanceText}</p>
+      </div>
     </div>
   );
 }
