@@ -74,7 +74,7 @@ function Toast({ toast, onClose }: { toast: ToastState; onClose: () => void }) {
 }
 
 export function AdminPanel({ user }: AdminPanelProps) {
-  const { data, updateSede, setSameDayBooking, addUser, removeUser, resetAll, updateDoctorSpecialty, getSpecialties, addSpecialty, updateSpecialty } = useApp();
+  const { data, updateSede, setSameDayBooking, setWeekendBooking, addUser, removeUser, resetAll, updateDoctorSpecialty, getSpecialties, addSpecialty, updateSpecialty } = useApp();
   const [tab, setTab] = useState<Tab>('sede');
   const [deleteError, setDeleteError] = useState('');
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -104,6 +104,20 @@ export function AdminPanel({ user }: AdminPanelProps) {
       );
     } catch {
       showToast('Error al cambiar el modo prueba. Revisa tu conexión e intenta nuevamente.', 'error');
+    }
+  };
+
+  const handleToggleWeekend = async (next: boolean) => {
+    try {
+      await setWeekendBooking(next);
+      showToast(
+        next
+          ? 'Fines de semana habilitados para agendar citas.'
+          : 'Fines de semana deshabilitados para agendar citas.',
+        'success',
+      );
+    } catch {
+      showToast('Error al cambiar la opción de fines de semana. Intenta nuevamente.', 'error');
     }
   };
 
@@ -188,7 +202,12 @@ export function AdminPanel({ user }: AdminPanelProps) {
       )}
       {tab === 'params' && <ParamsTab sede={data.sede} onSave={handleSaveSede} onReset={handleReset} />}
       {tab === 'test' && (
-        <TestModeTab enabled={data.sede.allowSameDayBooking} onToggle={handleToggleSameDay} />
+        <TestModeTab
+          sameDayEnabled={data.sede.allowSameDayBooking}
+          onToggleSameDay={handleToggleSameDay}
+          weekendEnabled={data.sede.allowWeekendBooking}
+          onToggleWeekend={handleToggleWeekend}
+        />
       )}
     </div>
   );

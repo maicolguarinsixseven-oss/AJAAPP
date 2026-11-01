@@ -7,6 +7,7 @@ export const DEFAULT_SEDE: SedeConfig = {
   lng: -74.2083,
   consultationMinutes: 15,
   allowSameDayBooking: false,
+  allowWeekendBooking: false,
 };
 
 export function createMockData(): AppData {

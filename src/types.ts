@@ -44,6 +44,7 @@ export interface SedeConfig {
   lng: number;
   consultationMinutes: number;
   allowSameDayBooking: boolean;
+  allowWeekendBooking: boolean;
 }
 
 export interface DoctorScheduleEntry {

@@ -40,6 +40,7 @@ interface AppContextValue {
   markAbsentAndReschedule: () => Promise<void>;
   updateSede: (sede: Partial<SedeConfig>) => Promise<void>;
   setSameDayBooking: (enabled: boolean) => Promise<void>;
+  setWeekendBooking: (enabled: boolean) => Promise<void>;
   addUser: (user: User) => Promise<void>;
   removeUser: (cedula: string) => Promise<boolean>;
   scheduleAppointment: (params: ScheduleAppointmentParams) => Promise<{ appointment: Appointment | null; error: string | null }>;
@@ -47,7 +48,7 @@ interface AppContextValue {
   getDoctorAvailability: (doctorCedula: string) => DoctorAvailability | null;
   saveDoctorSchedule: (entries: DoctorScheduleEntry[]) => Promise<void>;
   toggleScheduleDay: (doctorCedula: string, date: string) => Promise<void>;
-  ensureWeekdaysScheduled: (doctorCedula: string, monthsAhead?: number, includeToday?: boolean) => Promise<void>;
+  ensureWeekdaysScheduled: (doctorCedula: string, monthsAhead?: number, includeToday?: boolean, includeWeekend?: boolean) => Promise<void>;
   getDoctorSchedule: (doctorCedula: string) => DoctorScheduleEntry[];
   getDoctorDisabledDays: (doctorCedula: string) => string[];
   toggleTimeSlot: (doctorCedula: string, date: string, slotTime: string) => Promise<void>;
@@ -100,6 +101,7 @@ interface DbSedeConfig {
   lng: number;
   consultation_minutes: number;
   same_day_booking: boolean;
+  allow_weekend_booking: boolean;
 }
 
 interface DbDoctorAvailability {
@@ -153,6 +155,12 @@ interface DbQueueState {
   countdown_ends_at: number | null;
   attended_count: number;
   total_consultation_minutes: number;
+}
+
+function isWeekendDate(dateStr: string): boolean {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  return dow === 0 || dow === 6;
 }
 
 function mapUser(u: DbUser): User {
@@ -258,6 +266,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         lng: s.lng,
         consultationMinutes: s.consultation_minutes,
         allowSameDayBooking: s.same_day_booking,
+        allowWeekendBooking: s.allow_weekend_booking,
       };
     }
 
@@ -631,6 +640,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (sede.lng !== undefined) update.lng = sede.lng;
     if (sede.consultationMinutes !== undefined) update.consultation_minutes = sede.consultationMinutes;
     if (sede.allowSameDayBooking !== undefined) update.same_day_booking = sede.allowSameDayBooking;
+    if (sede.allowWeekendBooking !== undefined) update.allow_weekend_booking = sede.allowWeekendBooking;
     update.updated_at = new Date().toISOString();
 
     const { error } = await supabase.from('sede_config').update(update).eq('id', 1);
@@ -644,6 +654,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const doctors = data.users.filter((u) => u.role === 'doctor');
     for (const doctor of doctors) {
       await ensureWeekdaysScheduled(doctor.cedula, 6, true);
+    }
+  };
+
+  const setWeekendBooking = async (enabled: boolean) => {
+    await updateSede({ allowWeekendBooking: enabled });
+    if (!enabled) return;
+    const doctors = data.users.filter((u) => u.role === 'doctor');
+    for (const doctor of doctors) {
+      await ensureWeekdaysScheduled(doctor.cedula, 6, true, true);
     }
   };
 
@@ -879,7 +898,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Auto-seed every weekday (Mon-Fri) for the next `monthsAhead` months as
   // available, skipping days the doctor has explicitly disabled. Idempotent.
-  const ensureWeekdaysScheduled = async (doctorCedula: string, monthsAhead = 6, includeToday = false) => {
+  const ensureWeekdaysScheduled = async (
+    doctorCedula: string,
+    monthsAhead = 6,
+    includeToday = false,
+    includeWeekend = data.sede.allowWeekendBooking,
+  ) => {
     const { data: existingSched } = await supabase
       .from('doctor_schedule')
       .select('schedule_date')
@@ -901,7 +925,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!includeToday) cursor.setDate(cursor.getDate() + 1);
     while (cursor <= end) {
       const dow = cursor.getDay();
-      if (dow >= 1 && dow <= 5) {
+      if ((dow >= 1 && dow <= 5) || (includeWeekend && (dow === 0 || dow === 6))) {
         const dateStr = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
         if (!scheduledSet.has(dateStr) && !disabledSet.has(dateStr)) {
           toInsert.push({ doctor_cedula: doctorCedula, schedule_date: dateStr, start_hour: '08:00', end_hour: '17:00' });
@@ -917,7 +941,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const getDoctorSchedule = (doctorCedula: string): DoctorScheduleEntry[] => {
-    return data.doctorSchedule.filter((s) => s.doctorCedula === doctorCedula);
+    return data.doctorSchedule.filter(
+      (s) => s.doctorCedula === doctorCedula && (data.sede.allowWeekendBooking || !isWeekendDate(s.scheduleDate)),
+    );
   };
 
   const getDoctorDisabledDays = (doctorCedula: string): string[] => {
@@ -1066,6 +1092,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         markAbsentAndReschedule,
         updateSede,
         setSameDayBooking,
+        setWeekendBooking,
         addUser,
         removeUser,
         scheduleAppointment,
