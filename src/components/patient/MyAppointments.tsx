@@ -17,6 +17,7 @@ import {
 import { useApp } from '@/context/AppContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { CheckInZoneCard } from '@/components/patient/CheckInZoneCard';
+import { DoctorLiveDistance } from '@/components/patient/DoctorLiveDistance';
 import { useNow, formatCountdown } from '@/hooks/useNow';
 import { COUNTDOWN_SECONDS } from '@/types';
 import type { User as AppUser, Appointment } from '@/types';
@@ -172,6 +173,7 @@ export function MyAppointments({ user, onCheckedIn }: MyAppointmentsProps) {
                     {position >= 0 ? position : '—'}
                   </span>
                 </div>
+                <DoctorLiveDistance doctorCedula={doctorCedula} testMode={data.sede.allowSameDayBooking} />
               </>
             )}
           </div>
